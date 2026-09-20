@@ -54,6 +54,22 @@ class MahasiswaWebController extends Controller
         return redirect()->route('mahasiswa.data')->with('sukses', 'Data mahasiswa berhasil disimpan');
     }
 
+    public function daftarMahasiswa()
+    {
+        $daftarMahasiswa = \App\Models\Mahasiswa::orderBy('nama')->get();
+
+        return view('mahasiswa.daftar-mahasiswa-index', ['daftarMahasiswa' => $daftarMahasiswa]);
+    }
+
+    public function detailMahasiswa($nim)
+    {
+        $mahasiswa = \App\Models\Mahasiswa::with(['programStudi', 'matakuliah'])
+            ->where('nim', $nim)
+            ->firstOrFail();
+
+        return view('mahasiswa.daftar-mahasiswa-detail', ['mahasiswa' => $mahasiswa]);
+    }
+
     /**
      * Display the specified resource.
      */
