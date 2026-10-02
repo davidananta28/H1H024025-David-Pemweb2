@@ -31,9 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
             MahasiswaController::class,
             'update'
         ]);
-        Route::delete('/mahasiswa/{mahasiswa}', [
-            MahasiswaController::class,
-            'destroy'
-        ]);
+        Route::delete('/mahasiswa/{mahasiswa}', [MahasiswaController::class, 'destroy'])
+            ->middleware('peran.admin');
+        Route::put('/auth/password', [AuthController::class, 'ubahPassword']);
     });
 });

@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'ability' => CheckForAnyAbility::class,
             'abilities' => CheckAbilities::class,
+            'peran.admin' => \App\Http\Middleware\PeranAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 404);
             }
         });
+
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -41,8 +43,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 422);
             }
         });
-        $exceptions->render(function (AuthenticationException $e, Request
-        $request) {
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
                     'sukses' => false,
