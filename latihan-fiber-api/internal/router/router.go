@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 
 	"latihan-fiber-api/internal/handler"
-	"latihan-fiber-api/internal/middleware"
 )
 
 func Daftarkan(app *fiber.App, kunciApi string) {
@@ -17,9 +16,11 @@ func Daftarkan(app *fiber.App, kunciApi string) {
 		})
 	})
 
-	mahasiswa := api.Group("/mahasiswa", middleware.KunciApi(kunciApi))
+	mahasiswa := api.Group("/mahasiswa")
 
 	mahasiswa.Get("/", handler.DaftarMahasiswa)
-	mahasiswa.Get("/nim/:nim", handler.DetailMahasiswaByNim)
+	mahasiswa.Post("/", handler.BuatMahasiswa)
 	mahasiswa.Get("/:id", handler.DetailMahasiswa)
+	mahasiswa.Put("/:id", handler.PerbaruiMahasiswa)
+	mahasiswa.Delete("/:id", handler.HapusMahasiswa)
 }
