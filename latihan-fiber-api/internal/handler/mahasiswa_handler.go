@@ -15,6 +15,7 @@ func DaftarMahasiswa(c fiber.Ctx) error {
 	halaman, _ := strconv.Atoi(c.Query("halaman", "1"))
 	perHalaman, _ := strconv.Atoi(c.Query("per_halaman", "10"))
 	angkatan, _ := strconv.Atoi(c.Query("angkatan", "0"))
+	terhapus := c.Query("terhapus") == "true" || c.Query("hanya_terhapus") == "true"
 
 	if halaman < 1 {
 		halaman = 1
@@ -25,10 +26,11 @@ func DaftarMahasiswa(c fiber.Ctx) error {
 	}
 
 	filter := repository.FilterMahasiswa{
-		Cari:       c.Query("cari", ""),
-		Angkatan:   angkatan,
-		Halaman:    halaman,
-		PerHalaman: perHalaman,
+		Cari:          c.Query("cari", ""),
+		Angkatan:      angkatan,
+		Halaman:       halaman,
+		PerHalaman:    perHalaman,
+		HanyaTerhapus: terhapus,
 	}
 
 	daftar, total, err := repository.Ambil(filter)
@@ -38,7 +40,7 @@ func DaftarMahasiswa(c fiber.Ctx) error {
 
 	totalHalaman := int(total) / perHalaman
 
-	if int(total)%perHalaman != 0 {
+	if perHalaman > 0 && int(total)%perHalaman != 0 {
 		totalHalaman = totalHalaman + 1
 	}
 
@@ -184,5 +186,86 @@ func HapusMahasiswa(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"sukses": true,
 		"pesan":  "Data mahasiswa berhasil dihapus",
+	})
+}
+
+func PulihkanMahasiswa(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "ID harus berupa angka")
+	}
+
+	mahasiswa, err := repository.AmbilPerIdUnscoped(uint(id))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "Mahasiswa tidak ditemukan")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Gagal mengambil data mahasiswa")
+	}
+
+	if !mahasiswa.DeletedAt.Valid {
+		return fiber.NewError(fiber.StatusBadRequest, "Mahasiswa tidak dalam status terhapus")
+	}
+
+	err = repository.Pulihkan(uint(id))
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Gagal memulihkan data mahasiswa")
+	}
+
+	mahasiswaPulih, err := repository.AmbilPerId(uint(id))
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"sukses": true,
+			"pesan":  "Data mahasiswa berhasil dipulihkan",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"sukses": true,
+		"pesan":  "Data mahasiswa berhasil dipulihkan",
+		"data":   mahasiswaPulih,
+	})
+}
+
+func DaftarMahasiswaTerhapus(c fiber.Ctx) error {
+	halaman, _ := strconv.Atoi(c.Query("halaman", "1"))
+	perHalaman, _ := strconv.Atoi(c.Query("per_halaman", "10"))
+	angkatan, _ := strconv.Atoi(c.Query("angkatan", "0"))
+
+	if halaman < 1 {
+		halaman = 1
+	}
+
+	if perHalaman < 1 || perHalaman > 100 {
+		perHalaman = 10
+	}
+
+	filter := repository.FilterMahasiswa{
+		Cari:          c.Query("cari", ""),
+		Angkatan:      angkatan,
+		Halaman:       halaman,
+		PerHalaman:    perHalaman,
+		HanyaTerhapus: true,
+	}
+
+	daftar, total, err := repository.Ambil(filter)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Gagal mengambil data terhapus")
+	}
+
+	totalHalaman := int(total) / perHalaman
+	if perHalaman > 0 && int(total)%perHalaman != 0 {
+		totalHalaman = totalHalaman + 1
+	}
+
+	return c.JSON(fiber.Map{
+		"sukses": true,
+		"data":   daftar,
+		"meta": fiber.Map{
+			"halaman":       halaman,
+			"per_halaman":   perHalaman,
+			"total":         total,
+			"total_halaman": totalHalaman,
+		},
 	})
 }

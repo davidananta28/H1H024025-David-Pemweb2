@@ -6,10 +6,11 @@ import (
 )
 
 type FilterMahasiswa struct {
-	Cari       string
-	Angkatan   int
-	Halaman    int
-	PerHalaman int
+	Cari          string
+	Angkatan      int
+	Halaman       int
+	PerHalaman    int
+	HanyaTerhapus bool
 }
 
 func Ambil(filter FilterMahasiswa) ([]model.Mahasiswa, int64, error) {
@@ -17,6 +18,9 @@ func Ambil(filter FilterMahasiswa) ([]model.Mahasiswa, int64, error) {
 	var total int64
 
 	kueri := config.DB.Model(&model.Mahasiswa{})
+	if filter.HanyaTerhapus {
+		kueri = config.DB.Unscoped().Model(&model.Mahasiswa{}).Where("deleted_at IS NOT NULL")
+	}
 
 	if filter.Cari != "" {
 		pola := "%" + filter.Cari + "%"
@@ -55,6 +59,14 @@ func AmbilPerId(id uint) (model.Mahasiswa, error) {
 	return mahasiswa, err
 }
 
+func AmbilPerIdUnscoped(id uint) (model.Mahasiswa, error) {
+	var mahasiswa model.Mahasiswa
+
+	err := config.DB.Unscoped().Preload("ProgramStudi").First(&mahasiswa, id).Error
+
+	return mahasiswa, err
+}
+
 func Simpan(mahasiswa *model.Mahasiswa) error {
 	return config.DB.Create(mahasiswa).Error
 }
@@ -66,3 +78,16 @@ func Perbarui(mahasiswa *model.Mahasiswa) error {
 func Hapus(mahasiswa *model.Mahasiswa) error {
 	return config.DB.Delete(mahasiswa).Error
 }
+
+func Pulihkan(id uint) error {
+	return config.DB.Unscoped().Model(&model.Mahasiswa{}).Where("id = ?", id).Update("deleted_at", nil).Error
+}
+
+// Alias untuk konsistensi penamaan
+var (
+	AmbilMahasiswa      = Ambil
+	AmbilMahasiswaPerId = AmbilPerId
+	SimpanMahasiswa     = Simpan
+	PerbaruiMahasiswa   = Perbarui
+	HapusMahasiswa      = Hapus
+)
