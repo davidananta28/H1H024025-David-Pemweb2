@@ -172,3 +172,4 @@ func HapusMatakuliah(c fiber.Ctx) error {
 		"pesan":  "Data matakuliah berhasil dihapus",
 	})
 }
+

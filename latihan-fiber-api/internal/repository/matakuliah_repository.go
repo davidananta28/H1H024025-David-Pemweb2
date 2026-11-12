@@ -63,3 +63,4 @@ func PerbaruiMatakuliah(matakuliah *model.Matakuliah) error {
 func HapusMatakuliah(matakuliah *model.Matakuliah) error {
 	return config.DB.Delete(matakuliah).Error
 }
+

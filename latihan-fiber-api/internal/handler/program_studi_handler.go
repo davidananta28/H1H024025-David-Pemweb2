@@ -41,3 +41,4 @@ func DetailProgramStudi(c fiber.Ctx) error {
 		"data":   prodi,
 	})
 }
+

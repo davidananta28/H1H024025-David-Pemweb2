@@ -41,3 +41,4 @@ func AmbilProgramStudiPerId(id uint) (ProgramStudiDenganJumlah, error) {
 
 	return hasil, err
 }
+

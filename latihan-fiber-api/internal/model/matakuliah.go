@@ -15,3 +15,4 @@ type Matakuliah struct {
 func (Matakuliah) TableName() string {
 	return "matakuliahs"
 }
+
