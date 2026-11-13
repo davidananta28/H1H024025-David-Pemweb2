@@ -30,7 +30,7 @@ func main() {
 	app.Use(recoverer.New())
 	app.Use(middleware.WaktuProses())
 
-	router.Daftarkan(app, konf.KunciApi)
+	router.Daftarkan(app)
 
 	app.Use(func(c fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -50,6 +50,10 @@ func penanganGalat(c fiber.Ctx, err error) error {
 	if errors.As(err, &galatFiber) {
 		kode = galatFiber.Code
 		pesan = galatFiber.Message
+	}
+
+	if kode == fiber.StatusInternalServerError {
+		log.Println("Galat internal:", err.Error())
 	}
 
 	return c.Status(kode).JSON(fiber.Map{
