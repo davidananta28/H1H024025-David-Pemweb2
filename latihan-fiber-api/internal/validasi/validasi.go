@@ -49,7 +49,8 @@ func susunPesan(item validator.FieldError) string {
 
 	case "lte":
 		return "Nilai tidak boleh lebih dari " + item.Param()
-
+	case "nim":
+		return "NIM harus diawali huruf H diikuti angka, contoh H1A123001"
 	default:
 		return "Nilai tidak memenuhi aturan " + item.Tag()
 	}

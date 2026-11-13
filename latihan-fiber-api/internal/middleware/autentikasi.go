@@ -24,9 +24,17 @@ func Autentikasi() fiber.Handler {
 			return fiber.NewError(fiber.StatusUnauthorized, "Format header Authorization tidak sesuai")
 		}
 
-		klaim, err := auth.PeriksaToken(bagian[1], konf.JwtSecret)
+				klaim, err := auth.PeriksaToken(bagian[1], konf.JwtSecret)
 		if err != nil {
 			return fiber.NewError(fiber.StatusUnauthorized, "Token tidak valid atau sudah kedaluwarsa")
+		}
+
+		if klaim.ExpiresAt == nil { // BARU
+			return fiber.NewError(fiber.StatusUnauthorized, "Isi token tidak sesuai")
+		}
+
+		if auth.TokenDicabut(bagian[1]) { // BARU
+			return fiber.NewError(fiber.StatusUnauthorized, "Token sudah dicabut, silakan login kembali")
 		}
 
 		id, err := strconv.ParseUint(klaim.Subject, 10, 64)
@@ -36,6 +44,8 @@ func Autentikasi() fiber.Handler {
 
 		c.Locals("id_pengguna", uint(id))
 		c.Locals("peran", klaim.Peran)
+		c.Locals("token", bagian[1])                        // BARU
+		c.Locals("token_kedaluwarsa", klaim.ExpiresAt.Time) // BARU
 
 		return c.Next()
 	}
